@@ -1,5 +1,5 @@
 use raylib::prelude::*;
-// use rand::Rng;
+use rand::Rng;
 
 // fn movement(raylib::drawing::RaylibDrawHandle a) {
 
@@ -45,16 +45,18 @@ fn main() {
                                   xmax: rl.get_screen_width()-12-(box_line_width*2), 
                                   ymax: rl.get_screen_height()-12-(box_line_width*2)};
                                   
-    let _pixel_size_width: i32 = 10;
-    let _pixel_size_height: i32 = 10;
+    let pixel_size: i32 = 10;
 
     // Random food number
-    // let mut rng = rand::thread_rng();
+    let mut rng = rand::thread_rng();
     
     // Snake position
     let mut x: i32 = 16;
     let mut y: i32 = 34;
-
+    let mut food_x: i32 = 0;
+    let mut food_y: i32 = 0;
+    let mut food: bool = false;
+    
     while !rl.window_should_close() {
         // Start Drawing
         let mut d: RaylibDrawHandle = rl.begin_drawing(&thread);
@@ -68,23 +70,33 @@ fn main() {
         draw_box(box_x, box_y, box_line_width, box_width, box_height, &mut d);
 
         // // Draw food
-        // let food_y: i32 = rng.gen_range(21..width-37);
-        // let food_x: i32 = rng.gen_range(39..height-63);
-        // d.draw_circle(food_y, food_x, 10.0, Color::BLUE);
+        if !food
+        {   
+            food_x = rng.gen_range(bounding_box.xmin..bounding_box.xmax);
+            food_y = rng.gen_range(bounding_box.ymin..bounding_box.ymax);
+            print!("{food_x},{food_y}");
+            food = true;
+        }
 
         if d.is_key_down(KeyboardKey::KEY_S) {
-            y = y + 10;
+            y = y + pixel_size;
         };
         if d.is_key_down(KeyboardKey::KEY_W) {
-            y = y - 10;
+            y = y - pixel_size;
         };
         if d.is_key_down(KeyboardKey::KEY_A) {
-            x = x - 10;
+            x = x - pixel_size;
         };
         if d.is_key_down(KeyboardKey::KEY_D) {
-            x = x + 10;
+            x = x + pixel_size;
         };
+
+        if x == food_x && y==food_y {food = false};
+
         (x, y) = check_collision_box(&bounding_box, x, y);
-        d.draw_rectangle(x, y, 10, 10, Color::BLUE);
+        // Player position
+        d.draw_rectangle(x, y, pixel_size, pixel_size, Color::BLUE);
+        // Food position
+        d.draw_rectangle(food_x, food_y, pixel_size, pixel_size, Color::GREEN);
     }
 }
