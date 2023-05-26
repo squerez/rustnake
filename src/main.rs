@@ -1,5 +1,6 @@
 use raylib::prelude::*;
 use rand::Rng;
+use std::time;
 
 // fn movement(raylib::drawing::RaylibDrawHandle a) {
 
@@ -57,6 +58,12 @@ fn main() {
     let mut food_y: i32 = 0;
     let mut food: bool = false;
     
+    // Snake speed
+    let snake_speed: i64 = 100;
+    let _time: time::Duration = time::Duration::new(0, 100_000_000);
+    let mut _tic = time::Instant::now();
+    let mut _toc = time::Instant::now();
+
     while !rl.window_should_close() {
         // Start Drawing
         let mut d: RaylibDrawHandle = rl.begin_drawing(&thread);
@@ -69,34 +76,39 @@ fn main() {
         // d.draw_fps(12,12);
         draw_box(box_x, box_y, box_line_width, box_width, box_height, &mut d);
 
-        // // Draw food
-        if !food
-        {   
-            food_x = rng.gen_range(bounding_box.xmin..bounding_box.xmax);
-            food_y = rng.gen_range(bounding_box.ymin..bounding_box.ymax);
-            print!("{food_x},{food_y}");
-            food = true;
+        // Update logic according to the snake speed
+        _toc = time::Instant::now();
+        if (_toc-_tic) > _time{
+                // Draw food
+            if !food
+            {   
+                food_x = rng.gen_range(bounding_box.xmin..bounding_box.xmax);
+                food_y = rng.gen_range(bounding_box.ymin..bounding_box.ymax);
+                food = true;
+            }
+
+            if d.is_key_down(KeyboardKey::KEY_S) {
+                y = y + pixel_size;
+            };
+            if d.is_key_down(KeyboardKey::KEY_W) {
+                y = y - pixel_size;
+            };
+            if d.is_key_down(KeyboardKey::KEY_A) {
+                x = x - pixel_size;
+            };
+            if d.is_key_down(KeyboardKey::KEY_D) {
+                x = x + pixel_size;
+            };
+
+            if x == food_x && y==food_y {food = false};
+
+            (x, y) = check_collision_box(&bounding_box, x, y);
+            // Player position
+            d.draw_rectangle(x, y, pixel_size, pixel_size, Color::BLUE);
+            // Food position
+            d.draw_rectangle(food_x, food_y, pixel_size, pixel_size, Color::GREEN);
         }
-
-        if d.is_key_down(KeyboardKey::KEY_S) {
-            y = y + pixel_size;
-        };
-        if d.is_key_down(KeyboardKey::KEY_W) {
-            y = y - pixel_size;
-        };
-        if d.is_key_down(KeyboardKey::KEY_A) {
-            x = x - pixel_size;
-        };
-        if d.is_key_down(KeyboardKey::KEY_D) {
-            x = x + pixel_size;
-        };
-
-        if x == food_x && y==food_y {food = false};
-
-        (x, y) = check_collision_box(&bounding_box, x, y);
-        // Player position
-        d.draw_rectangle(x, y, pixel_size, pixel_size, Color::BLUE);
-        // Food position
-        d.draw_rectangle(food_x, food_y, pixel_size, pixel_size, Color::GREEN);
     }
+        
+        
 }
