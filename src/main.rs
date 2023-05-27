@@ -1,62 +1,7 @@
 use raylib::prelude::*;
-use rand::Rng;
+mod utils;
 use std::time;
 
-// fn movement(raylib::drawing::RaylibDrawHandle a) {
-
-// }
-enum DIRECTION{
-    Up, Down, Left, Right
-}
-
-#[derive(Debug)]
-struct BBOX{
-    xmin: i32,
-    ymin: i32,
-    xmax: i32,
-    ymax: i32,
-}
-
-#[derive(Debug)]
-struct OBJECT{
-    x: i32,
-    y: i32,
-    real_x: i32,
-    real_y: i32,
-}
-
-struct VECTOR2D{
-    x: i32,
-    y: i32,
-}
-
-fn check_collision_box(bounding_box: &BBOX, object: &mut OBJECT){
-    if object.x<bounding_box.xmin {object.x = bounding_box.xmax};
-    if object.x>bounding_box.xmax {object.x = bounding_box.xmin};
-    if object.y<bounding_box.ymin {object.y = bounding_box.ymax};
-    if object.y>bounding_box.ymax {object.y = bounding_box.ymin};
-}
-
-fn update_real_pos(object: &mut OBJECT, padding: &VECTOR2D, size: &VECTOR2D){
-    object.real_x = object.x * size.x + padding.x;
-    object.real_y = object.y * size.y + padding.y;
-}
-
-fn get_input_dir(mut direction:DIRECTION, handle: &RaylibDrawHandle) -> DIRECTION{
-    if handle.is_key_down(KeyboardKey::KEY_W) {
-        if !matches!(direction, DIRECTION::Down) {direction = DIRECTION::Up};
-    };
-    if handle.is_key_down(KeyboardKey::KEY_A) {
-        if !matches!(direction, DIRECTION::Right) {direction = DIRECTION::Left};
-    };
-    if handle.is_key_down(KeyboardKey::KEY_S) {
-        if !matches!(direction, DIRECTION::Up) {direction = DIRECTION::Down};
-    };
-    if handle.is_key_down(KeyboardKey::KEY_D) {
-        if !matches!(direction, DIRECTION::Left) {direction = DIRECTION::Right};
-    };
-    return direction;
-}
 
 fn main() {
     // Hardcoded window number because of the pixel size
@@ -68,33 +13,37 @@ fn main() {
         .title("rustsnake")
         .build();
 
-    rl.set_target_fps(60);
+    // Comment to see performance
+    // rl.set_target_fps(60);
 
     // Converting the whole area as if it was pixels
-    let pixel_pad: VECTOR2D = VECTOR2D {x: 0, y: 35};
-    let pixel_size: VECTOR2D = VECTOR2D {x: 20, y: 20};
-    let game_area: BBOX = BBOX {xmin: 0,
-                                ymin: 0,
-                                xmax: 23,
-                                ymax: 23};
+    let pixel_pad: utils::VECTOR2D = utils::VECTOR2D {x: 0, y: 35};
+    let pixel_size: utils::VECTOR2D = utils::VECTOR2D {x: 20, y: 20};
+    let game_area: utils::BBOX = utils::BBOX {xmin: 0,
+                                              ymin: 0,
+                                              xmax: 23,
+                                              ymax: 23};
     
-    // Random food number
-    let mut rng = rand::thread_rng();
-    
-    // Snake position
-    let mut snake: OBJECT = OBJECT{x:5,y:5,real_x:0,real_y:0};
-    let mut food: OBJECT = OBJECT{x:0,y:0,real_x:0,real_y:0};
-    let mut food_exists: bool = false;
-    let mut snake_dir:DIRECTION = DIRECTION::Right;
+    // Create Snake
+    let mut new_direction: utils::DIRECTION = utils::DIRECTION::Right;
+    let mut snake: utils::SNAKE = utils::SNAKE::new();
+
+    // Create Food
+    let mut food: utils::VECTOR2D = utils::VECTOR2D{x:0,y:0};
+    utils::gen_food(&mut food, &game_area);
     
     // Snake speed
-    let snake_speed: time::Duration = time::Duration::new(0, 100_000_000);
+    let snake_speed: time::Duration = time::Duration::new(0, 150_000_000);
     let mut tic: time::Instant = time::Instant::now();
     let mut toc: time::Instant;
 
     // Track score
-    let mut score: i64 = 0;
+    // Size of snake is according to score
+    let mut score: i32 = 0;
     let mut score_test: String;
+
+    // Object to get the real coordinates
+    let mut real_coords: utils::VECTOR2D;
 
     while !rl.window_should_close() {
         // Start Drawing
@@ -106,42 +55,34 @@ fn main() {
         score_test = format!("Score: {score}");
         d.draw_text(score_test.as_str(), 12, 12, 20, Color::BLACK);
         d.draw_rectangle(0, 30, win_width, 5, Color::RED);
-        // d.draw_fps(12,12);
+        d.draw_fps(370,12);
 
         // Check for inputs
-        snake_dir = get_input_dir(snake_dir, &d);
+        new_direction = utils::get_input_dir(new_direction, snake.direction, &d);
 
         // Update logic according to the snake speed
         toc = time::Instant::now();
         if (toc-tic) > snake_speed{
             tic = time::Instant::now();
-            // Draw food
-            if !food_exists
-            {   
-                food.x = rng.gen_range(game_area.xmin..game_area.xmax);
-                food.y = rng.gen_range(game_area.ymin..game_area.ymax);
-                update_real_pos(&mut food, &pixel_pad, &pixel_size);
-                food_exists = true;
-            }
-            
-            match snake_dir{
-                DIRECTION::Up => {snake.y -= 1;},
-                DIRECTION::Down => {snake.y += 1;},
-                DIRECTION::Left => {snake.x -= 1;},
-                DIRECTION::Right => {snake.x += 1;},
-            };
-
-            if snake.x == food.x && snake.y==food.y {
-                food_exists = false;
+            // Check if it got food
+            if snake.body[0].x == food.x && snake.body[0].y==food.y {
+                utils::gen_food(&mut food, &game_area);
                 score += 1;
             };
-            check_collision_box(&game_area, &mut snake);
-            update_real_pos(&mut snake, &pixel_pad, &pixel_size);
+            snake.direction = new_direction;
+            if !utils::update_snake(&mut snake, score, &game_area){break};
         }
-        // Player position
-        d.draw_rectangle(snake.real_x, snake.real_y, pixel_size.x, pixel_size.y, Color::BLUE);
-        // Food position
-        d.draw_rectangle(food.real_x, food.real_y, pixel_size.x, pixel_size.y, Color::GREEN);
+
+        // Draw Food
+        real_coords = utils::update_real_pos(&food, &pixel_pad, &pixel_size);
+        d.draw_rectangle(real_coords.x, real_coords.y, pixel_size.x, pixel_size.y, Color::GREEN);
+
+        // Draw Snake
+        real_coords = utils::update_real_pos(&snake.body[0], &pixel_pad, &pixel_size);
+        d.draw_rectangle(real_coords.x, real_coords.y, pixel_size.x, pixel_size.y, Color::VIOLET);
+        for i in 1..(score+1) as usize{
+            real_coords = utils::update_real_pos(&snake.body[i], &pixel_pad, &pixel_size);
+            d.draw_rectangle(real_coords.x, real_coords.y, pixel_size.x, pixel_size.y, Color::BLUE);
+        }
     }
-        
 }
