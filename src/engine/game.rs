@@ -94,19 +94,6 @@ impl Game {
             }
         }
 
-        // After the direction is applied, if the snake head is still out of bounds
-        // This means we have an error, and will stop the game.
-        let is_out_of_bounds: bool = 
-            snake_head.x < 0 || 
-            snake_head.y < 0 ||
-            snake_head.x >= SCREEN_WIDTH / GRID_SIZE ||
-            snake_head.y >= SCREEN_HEIGHT / GRID_SIZE
-        ;
-        if is_out_of_bounds {
-            self.game_over = true;
-            return;
-        }
-
         // Check if any segment of the snake's body except the head has the same coordinates as
         // the head
         // If it does, it means the snake has collided with itself and the game is over
