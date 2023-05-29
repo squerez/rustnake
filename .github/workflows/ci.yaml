@@ -25,3 +25,14 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-targets --all-features -- -D warnings
+      - uses: codacy/codacy-analysis-cli-action@master
+        with:
+          directory: src
+          verbose: true
+          output: results.sarif
+          format: sarif
+          gh-code-scanning-compat: true
+          max-allowed-issues: 2147483647
+      - uses: github/codeql-action/upload-sarif@main
+        with:
+          sarif_file: results.sarif
