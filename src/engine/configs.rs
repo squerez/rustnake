@@ -1,6 +1,6 @@
 pub const SCREEN_WIDTH: i32 = 640;
 pub const SCREEN_HEIGHT: i32 = 480;
-pub const GRID_SIZE: f32 = 20.0;
+pub const GRID_SIZE: i32 = 20;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Direction {
@@ -12,7 +12,6 @@ pub enum Direction {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SnakeSegment {
-    pub x: f32,
-    pub y: f32,
+    pub x: i32,
+    pub y: i32,
 }
-

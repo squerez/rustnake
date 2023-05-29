@@ -1,6 +1,4 @@
 use raylib::prelude::*;
-use std::time::Duration;
-use std::thread;
 
 mod engine;
 use engine::game::Game;
@@ -60,9 +58,7 @@ fn main() {
                     Color::BLACK,
                 );
             }
-
         }
-        thread::sleep(Duration::from_millis(75));
     }
 }
 

@@ -1,7 +1,8 @@
 use raylib::prelude::*;
 
-// Import linked list to store snake
+// Import linked list to store snake and to calculate throttle speed
 use std::collections::LinkedList;
+use std::time;
 
 // Import random to spawn food
 use rand::Rng;
@@ -16,6 +17,8 @@ pub struct Game {
     pub food: SnakeSegment,
     pub game_over: bool,
     pub score: i32,
+    pub start_instant: time::Instant,
+    pub update_speed: time::Duration
 }
 
 
@@ -26,11 +29,11 @@ impl Game {
         // Creates a new instance of a snake in the form of a `LinkedList`.
         // The elements of the snake are provided as a vector with x and y coordinates.
         // The snake starts with only one element
-        let snake = LinkedList::from_iter(vec![SnakeSegment { x: 3.0, y: 5.0 },]);
+        let snake = LinkedList::from_iter(vec![SnakeSegment { x: 3, y: 5 },]);
 
         // Creates a new instance of a food in the form of a vector with x and y coordinates.
         // TODO: Randomize food 
-        let food = SnakeSegment { x: 10.0, y: 5.0 };
+        let food = SnakeSegment { x: 10, y: 5 };
 
         // A new game is now returned where the properties are instantiated already
         Game {
@@ -39,6 +42,8 @@ impl Game {
             food,
             game_over: false,
             score: 0,
+            start_instant: time::Instant::now(),
+            update_speed: time::Duration::new(0, 75_000_000)
         }
     }
 
@@ -53,38 +58,38 @@ impl Game {
         // Whenever the head goes out of bounds, it wraps around to the opposite side of the screen
         match self.direction {
             Direction::Up => {
-                snake_head.y -= 1.0;
+                snake_head.y -= 1;
 
                 // In this case it goes to the top of screen
-                if snake_head.y < 0.0 {
-                    snake_head.y = (SCREEN_HEIGHT as f32) / GRID_SIZE - 1.0;
+                if snake_head.y < 0 {
+                    snake_head.y = SCREEN_HEIGHT / GRID_SIZE - 1;
                 }
             }
 
             Direction::Down => {
-                snake_head.y += 1.0;
+                snake_head.y += 1;
 
                 // In this case it goes to the bottom of screen
-                if snake_head.y >= (SCREEN_HEIGHT as f32) / GRID_SIZE {
-                    snake_head.y = 0.0;
+                if snake_head.y >= SCREEN_HEIGHT / GRID_SIZE {
+                    snake_head.y = 0;
                 }
             }
 
             Direction::Left => {
-                snake_head.x -= 1.0;
+                snake_head.x -= 1;
 
                 // In this case it goes to the right of screen
-                if snake_head.x < 0.0 {
-                    snake_head.x = (SCREEN_WIDTH as f32) / GRID_SIZE - 1.0;
+                if snake_head.x < 0 {
+                    snake_head.x = SCREEN_WIDTH / GRID_SIZE - 1;
                 }
             }
 
             Direction::Right => {
-                snake_head.x += 1.0;
+                snake_head.x += 1;
 
                 // In this case it goes to the left of screen
-                if snake_head.x >= (SCREEN_WIDTH as f32) / GRID_SIZE {
-                    snake_head.x = 0.0;
+                if snake_head.x >= SCREEN_WIDTH / GRID_SIZE {
+                    snake_head.x = 0;
                 }
             }
         }
@@ -92,10 +97,10 @@ impl Game {
         // After the direction is applied, if the snake head is still out of bounds
         // This means we have an error, and will stop the game.
         let is_out_of_bounds: bool = 
-            snake_head.x < 0.0 || 
-            snake_head.y < 0.0 ||
-            snake_head.x >= (SCREEN_WIDTH as f32) / GRID_SIZE as f32 ||
-            snake_head.y >= (SCREEN_HEIGHT as f32) / GRID_SIZE as f32
+            snake_head.x < 0 || 
+            snake_head.y < 0 ||
+            snake_head.x >= SCREEN_WIDTH / GRID_SIZE ||
+            snake_head.y >= SCREEN_HEIGHT / GRID_SIZE
         ;
         if is_out_of_bounds {
             self.game_over = true;
@@ -114,25 +119,29 @@ impl Game {
             return;
         }
 
-        // Check if the snake's head is within a buffer zone of the food
-        // If the head is within range, it means the score can be updated 
-        let buffer = 0.25;
-        let food_has_been_eaten: bool = 
-            (snake_head.x - self.food.x).abs() <= buffer
-            &&
-            (snake_head.y - self.food.y).abs() <= buffer
-        ;
+        // In this section we throttle the update to make snake speed bearable for the user
+        let end_instant: time::Instant = time::Instant::now();
+        if (end_instant - self.start_instant) > self.update_speed {
+            // Recalculate time 
+            self.start_instant = time::Instant::now();
+            
+            // Check if the food has been eaten
+            let food_has_been_eaten: bool = 
+                (snake_head.x == self.food.x) 
+                && 
+                (snake_head.y == self.food.y);
 
-        if food_has_been_eaten {
-            self.score += 1;
-            self.spawn_food();
-        } else {
-            // Else, the last element is removed
-            self.snake.pop_back();
+            if food_has_been_eaten {
+                self.score += 1;
+                self.spawn_food();
+            } else {
+                // Else, the last element is removed
+                self.snake.pop_back();
+            }
+
+            // And the updated head is pushed to the front to simulate movement
+            self.snake.push_front(snake_head);
         }
-
-        // And the updated head is pushed to the front to simulate movement
-        self.snake.push_front(snake_head);
     }
 
     fn spawn_food(&mut self) {
@@ -140,8 +149,8 @@ impl Game {
         let mut rng = rand::thread_rng();
 
         loop {
-            let x = rng.gen_range(0..(SCREEN_WIDTH as i32 / GRID_SIZE as i32)) as f32;
-            let y = rng.gen_range(0..(SCREEN_HEIGHT as i32 / GRID_SIZE as i32)) as f32;
+            let x = rng.gen_range(0..(SCREEN_WIDTH / GRID_SIZE ));
+            let y = rng.gen_range(0..(SCREEN_HEIGHT / GRID_SIZE ));
 
             // It checks if the newly generated food is colliding with any segment of the snakes
             // body
@@ -176,8 +185,9 @@ impl Game {
             // For the snake we make the it look smaller and add a border
             // in the same colour of the bg to make it look cooler
             // This draw will only draw a border around the body and head
-            let body_size = GRID_SIZE * 0.8;
-            let border_size = (GRID_SIZE - body_size) / 2.0;
+            let body_size: i32 = (GRID_SIZE as f32 * 0.8) as i32;
+            let border_size: i32 = (GRID_SIZE - body_size) / 2;
+
             d.draw_rectangle(
                 (x + border_size) as i32,
                 (y + border_size) as i32,
@@ -196,10 +206,10 @@ impl Game {
 
             // Now we draw the whole snake with the different colors
             d.draw_rectangle(
-                (x + border_size + 1.0) as i32,
-                (y + border_size + 1.0) as i32,
-                (body_size- 2.0) as i32,
-                (body_size- 2.0) as i32,
+                (x + border_size + 1) as i32,
+                (y + border_size + 1) as i32,
+                (body_size - 2) as i32,
+                (body_size - 2) as i32,
                 color,
             );
         }
