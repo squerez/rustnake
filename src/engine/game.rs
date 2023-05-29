@@ -52,7 +52,7 @@ impl Game {
         if self.game_over { return; }
 
         // A new head is created by cloning the first segment of the snake
-        let mut snake_head = self.snake.front().expect("Snake has no segments").clone();
+        let mut snake_head = *self.snake.front().expect("Snake has no segments");
 
         // Updates the position of the snake head based on the current direction
         // Whenever the head goes out of bounds, it wraps around to the opposite side of the screen
@@ -176,10 +176,10 @@ impl Game {
             let border_size: i32 = (GRID_SIZE - body_size) / 2;
 
             d.draw_rectangle(
-                (x + border_size) as i32,
-                (y + border_size) as i32,
-                body_size as i32,
-                body_size as i32,
+                x + border_size,
+                y + border_size,
+                body_size,
+                body_size,
                 Color::WHITE,
             );
 
@@ -193,10 +193,10 @@ impl Game {
 
             // Now we draw the whole snake with the different colors
             d.draw_rectangle(
-                (x + border_size + 1) as i32,
-                (y + border_size + 1) as i32,
-                (body_size - 2) as i32,
-                (body_size - 2) as i32,
+                x + border_size + 1,
+                y + border_size + 1,
+                body_size - 2,
+                body_size - 2,
                 color,
             );
         }
@@ -205,10 +205,10 @@ impl Game {
         let food_x = self.food.x * GRID_SIZE;
         let food_y = self.food.y * GRID_SIZE;
         d.draw_rectangle(
-            food_x as i32,
-            food_y as i32,
-            GRID_SIZE as i32,
-            GRID_SIZE as i32,
+            food_x,
+            food_y,
+            GRID_SIZE,
+            GRID_SIZE,
             Color::RED,
         );
 

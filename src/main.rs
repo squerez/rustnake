@@ -37,27 +37,25 @@ fn main() {
             game.update();
             game.render(&mut d);
         }
+        else if d.is_key_pressed(KeyboardKey::KEY_ENTER) {
+            game = Game::new();
+        } 
         else {
-            if d.is_key_pressed(KeyboardKey::KEY_ENTER) {
-                game = Game::new();
-            } 
-            else {
-                let score_message = format!("Score: {}", game.score);
-                d.draw_text(
-                    "Game Over",
-                    SCREEN_WIDTH / 2 - 70,
-                    SCREEN_HEIGHT / 2 - 10,
-                    40,
-                    Color::BLACK,
-                );
-                d.draw_text(
-                    &score_message,
-                    SCREEN_WIDTH / 2 - 70,
-                    SCREEN_HEIGHT / 2 + 40,
-                    20,
-                    Color::BLACK,
-                );
-            }
+            let score_message = format!("Score: {}", game.score);
+            d.draw_text(
+                "Game Over",
+                SCREEN_WIDTH / 2 - 70,
+                SCREEN_HEIGHT / 2 - 10,
+                40,
+                Color::BLACK,
+            );
+            d.draw_text(
+                &score_message,
+                SCREEN_WIDTH / 2 - 70,
+                SCREEN_HEIGHT / 2 + 40,
+                20,
+                Color::BLACK,
+            );
         }
     }
 }
