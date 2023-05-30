@@ -11,7 +11,7 @@ fn main() {
         .size(SCREEN_WIDTH, SCREEN_HEIGHT)
         .title("rustnake")
         .build();
-    rl.set_target_fps(60);
+    // rl.set_target_fps(60);
 
     // Create a new game
     let mut game = Game::new();
@@ -20,6 +20,7 @@ fn main() {
     while !rl.window_should_close() {
         let mut d: RaylibDrawHandle = rl.begin_drawing(&thread);
         d.clear_background(Color::WHITE);
+        d.draw_fps(370,12);
 
         if !game.game_over {
             if d.is_key_pressed(KeyboardKey::KEY_UP) && game.direction != Direction::Down {
