@@ -1,6 +1,6 @@
 # Rustnake
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache](https://img.shields.io/badge/licence-apache-blue.svg)](LICENSE.md)
 
 ## Introduction
 
