@@ -1,6 +1,6 @@
 # Rustnake
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache](https://img.shields.io/badge/licence-apache-blue.svg)](LICENSE)
 
 ## Introduction
 
@@ -51,4 +51,4 @@ If you encounter any problems while using Rustnake or have any questions, please
 You can contact the project maintainer via the email provided in the repository.
 
 ## License
-Rustnake is distributed under the Apache License. See the LICENSE file for more information.
+Rustnake is distributed under the Apache License. See the [LICENSE](LICENSE) file for more information.
